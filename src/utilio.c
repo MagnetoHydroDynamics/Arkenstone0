@@ -23,7 +23,7 @@ void usage(const char *pname) {
 
 void errorf(const char *fmt, ...) {
     va_list args;
-    va_start(args, pname);
+    va_start(args, fmt);
     if (0 > vfprintf(stderr, fmt, args)) {
         exit(EXIT_FATAL);
     }
