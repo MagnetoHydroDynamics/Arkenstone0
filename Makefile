@@ -28,8 +28,8 @@ clean:
 ./lib/libdebug.a: ./obj/debug.o
 	$(AR) ./lib/libdebug.a ./obj/debug.o
 
-./lib/libmips.a: ./obj/sim.o ./obj/elf.o ./obj/inst.o
-	$(AR) ./lib/libmips.a ./obj/sim.o ./obj/elf.o ./obj/inst.o
+./lib/libmips.a: ./obj/sim.o ./obj/elf.o ./obj/inst.o ./obj/mod.o
+	$(AR) ./lib/libmips.a ./obj/sim.o ./obj/elf.o ./obj/inst.o ./obj/mod.o
 
 ./lib/libutil.a: ./obj/utils.o ./obj/ioutils.o
 	$(AR) ./lib/libutil.a ./obj/utils.o ./obj/ioutils.o
@@ -48,6 +48,9 @@ clean:
 ./obj/sim.o: ./src/sim.c
 	 $(CC) -c -o ./obj/sim.o ./src/sim.c
 
+./obj/mod.o: ./src/mod.c
+	 $(CC) -c -o ./obj/mod.o ./src/mod.c
+
 ./obj/utils.o: ./src/utils.c
 	$(CC) -c -o ./obj/utils.o ./src/utils.c
 
@@ -59,20 +62,3 @@ clean:
 
 ./obj/inst.o: ./src/inst.c
 	$(CC) -c -o ./obj/inst.o ./src/inst.c
-
-# SOURCE DEPENDENCIES
-
-./src/debug.c: ./incl/debug.h
-
-./src/elf.c: ./incl/elf.h
-
-./src/inst.c: ./incl/inst.h
-
-./src/ioutils.c: ./incl/ioutils.h ./incl/utils.h
-
-./src/nodebug.c: ./incl/debug.h
-
-./src/sim.c: ./incl/sim.h
-
-./src/utils.c: ./incl/utils.h
-./src/utils.h: ./incl/utils.c
