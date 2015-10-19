@@ -1,9 +1,9 @@
 
 #define UTILS_C
 #include <utils.h>
+#undef UTILS_C
 
-// Taken from wikipedia
-// works well when most bits are 0
+// Works well when very few bits are set
 int popcnt(size_t s) {
     int count;
     for(count = 0; 0 != s; count++) {
