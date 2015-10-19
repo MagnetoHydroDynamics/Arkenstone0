@@ -1,4 +1,6 @@
 
+#include <stdlib.h>
+
 #ifndef UTIL_H
 #define UTIL_H
 
