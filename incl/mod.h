@@ -107,35 +107,60 @@ typedef struct  {
 } MREGS_t;
 
 typedef struct {
+    b32 addr;
+    b32 inst;
+} disas_t;
+
+typedef struct {
     b6 opcode;
     b26 address;
     b32 inst;
+    b32 next_pc;
+    
+    disas_t dis;
 } IFID_t;
 
 typedef struct {
     b1 jump;
     b32 jump_target;
 
-    b32 _inst;
+    b5 funct;
+
+    b5 rd;
+    b32 rd_val;
+
+    b5 rs;
+    b32 rs_val;
+
+    b5 rt;
+    b32 rt_val;
+    
+    disas_t dis;
 } IDEX_t;
 
 typedef struct {
     mem_action_t action;
     access_t acess;
     
+    b1 jump;
+    b32 jump_taget;
+
     b32 address;
     b32 value;
     b6 reg;
 
-    b32 _inst;
+    disas_t dis;
 } EXMEM_t;
 
 typedef struct {
+     
     b1 nop;
     b32 value;
     b6 reg;
 
     b32 _inst;
+
+    disas_t dis;
 } MEMWB_t;
 
 typedef struct {
