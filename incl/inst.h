@@ -4,7 +4,7 @@
 
 #include <sim.h>
 
-interp_r J_j() { return CONTINUE; }
+interp_r J_j();
 
 #endif //ndef INST_H
 

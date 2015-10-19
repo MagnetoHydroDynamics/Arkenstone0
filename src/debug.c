@@ -161,7 +161,8 @@ void disassemble(b32 pc, b32 inst) {
             FMT(IxFMT);
             break;
     }
-
+    
+    debug(" --- %s\n", dfmt);
     PRINT;
 
 #undef PRINT
