@@ -1,20 +1,27 @@
 
-#include <utilio.h>
+#include <errno.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define DEBUG_C
 #include <debug.h>
+#include <ioutils.h>
 
 void set_debug(const char *fname) {
     FILE *f;
-    if (NULL == (f = fopen(fname)))
-        errorf("ERROR: Unable to open debug log file `%s'", fname); 
+    if (NULL == (f = fopen(fname, "a")))
+        errorf("ERROR: set_debug - Unable to open debug log file `%s'\nReason: %s\n",
+                fname, strerror(errno)); 
+    set_debugf(f);
 }
 
 void set_debugf(FILE *file) {
     debug_stream = file;
-    if (NULL != debug_steam)
+    if (NULL != debug_stream)
     if (0 > fprintf(debug_stream, "DEBUG ON\n"))
-        errorf("ERROR: Unable to write to debug stream.");
+        errorf("ERROR: set_debugf - Unable to write to debug stream.");
 }
 
 void debug(const char *fmt, ...) {

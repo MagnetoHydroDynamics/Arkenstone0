@@ -3,9 +3,9 @@
 #define DEBUG_H
 
 #ifndef DEBUG_C
-extern FILE *debug_steam;
+extern FILE *debug_stream;
 #else 
-FILE *debug_steam = NULL;
+FILE *debug_stream = NULL;
 #endif
 
 void set_debug(const char *);
