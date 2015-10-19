@@ -31,11 +31,16 @@ void errorf(const char *fmt, ...) {
     exit(EXIT_FAILURE);
 }
 
+void init_config_file(config_file *conf) {
+    memset(conf, 0, sizeof(config_file));
+}
+
 void read_config_file(const char *name, config_file *conf) {
     FILE *f;
     if (NULL == (f = fopen(name, "r")))
         errorf("ERROR: read_config_file - Unable to open confuguration file `%s'\nReason: %s", name, strerror(errno));
     
+    conf->name = name;
     read_config_filef(f, conf);
 }
 
@@ -51,19 +56,18 @@ void read_config_filef(FILE *file, config_file *conf) {
         conf->t_regs[6],
         conf->t_regs[7],
         conf->t_regs[8],
-        conf->inst_cache.sets,
-        conf->inst_cache.blocks,
-        conf->inst_cache.words,
-        conf->data_cache.sets,
-        conf->data_cache.blocks,
-        conf->data_cache.words,
-        conf->l2_cache.sets,
-        conf->l2_cache.blocks,
-        conf->l2_cache.words);
+        conf->icache.sets,
+        conf->icache.blocks,
+        conf->icache.words,
+        conf->dcache.sets,
+        conf->dcache.blocks,
+        conf->dcache.words,
+        conf->l2cache.sets,
+        conf->l2cache.blocks,
+        conf->l2cache.words);
 
     if (17 != ret)
         errorf("ERROR: read_config_file - Configuration file not in correct format\n");
-
 }
 
 void verify_config(config_file *conf) {
@@ -71,17 +75,17 @@ void verify_config(config_file *conf) {
     for (int i = 0; i < 8; i++) {
         ok = ok && conf->t_regs[i] <= UINT_MAX;        
     }
-    ok = ok && popcnt(conf->inst_cache.sets) < 2;
-    ok = ok && popcnt(conf->inst_cache.blocks) < 2;
-    ok = ok && popcnt(conf->inst_cache.words) < 2;
+    ok = ok && popcnt(conf->icache.sets) < 2;
+    ok = ok && popcnt(conf->icache.blocks) < 2;
+    ok = ok && popcnt(conf->icache.words) < 2;
 
-    ok = ok && popcnt(conf->data_cache.sets) < 2;
-    ok = ok && popcnt(conf->data_cache.blocks) < 2;
-    ok = ok && popcnt(conf->data_cache.words) < 2;
+    ok = ok && popcnt(conf->dcache.sets) < 2;
+    ok = ok && popcnt(conf->dcache.blocks) < 2;
+    ok = ok && popcnt(conf->dcache.words) < 2;
 
-    ok = ok && popcnt(conf->l2_cache.sets) < 2;
-    ok = ok && popcnt(conf->l2_cache.blocks) < 2;
-    ok = ok && popcnt(conf->l2_cache.words) < 2;
+    ok = ok && popcnt(conf->l2cache.sets) < 2;
+    ok = ok && popcnt(conf->l2cache.blocks) < 2;
+    ok = ok && popcnt(conf->l2cache.words) < 2;
 
     if (!ok)
         errorf("ERROR: verify_config - Configuration file contains illegal values\n");

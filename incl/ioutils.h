@@ -8,11 +8,13 @@
 
 typedef struct {
 
+    const char *name;
+
     uint64_t t_regs[8];
 
     struct {
         size_t sets, blocks, words;
-    } inst_cache, data_cache, l2_cache;
+    } icache, dcache, l2cache;
 
 } config_file;
 
@@ -54,6 +56,7 @@ const char *const config_file_format =
 void usage() __attribute__((noreturn));
 void errorf(const char *, ...) __attribute__((noreturn));
 
+void init_config_file(config_file *);
 void read_config_file(const char *, config_file *);
 void read_config_filef(FILE *, config_file *);
 void verify_config(config_file *);
