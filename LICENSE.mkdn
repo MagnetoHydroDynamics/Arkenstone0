@@ -11,7 +11,6 @@ Files `elf.c`, `elf.h`, and `mips32.h` are authored by
 
 with a minor edit to `elf.c` by the undersigned.
 
-
 All other files in this repository are authored by
 
 - Karl D. Asmussen <mhd@herebedragons.dk>
@@ -38,5 +37,5 @@ MIT license:
 > TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
 > OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.*
 
-In accordance with the Copenhagen License the names "DIKU", "Annie Jane Pinder",
+Addendum: in accordance with the Copenhagen License the names "DIKU", "Annie Jane Pinder",
 and "Oleksandr Shturmov" may not be used to promote products derived from this software.
