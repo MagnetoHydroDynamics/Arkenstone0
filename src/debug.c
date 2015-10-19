@@ -117,6 +117,11 @@ void disassemble(b32 pc, b32 inst) {
                     MNE(stl);
                     FMT(RsFMT);
                     break;
+
+                default:
+                    MNE(unknown);
+                    FMT(R_FMT);
+                    break;
             }
             break;
 
@@ -160,9 +165,14 @@ void disassemble(b32 pc, b32 inst) {
             MNE(lui);
             FMT(IxFMT);
             break;
+
+        default:
+            MNE(unknown);
+            FMT(R_FMT);
+            break;
     }
     
-    debug(" --- %s\n", dfmt);
+    debug("%s", dfmt);
     PRINT;
 
 #undef PRINT
