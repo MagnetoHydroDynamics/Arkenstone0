@@ -1,6 +1,6 @@
 
-#define UTIL_C
-#include <util.h>
+#define UTILS_C
+#include <utils.h>
 
 // Taken from wikipedia
 // works well when most bits are 0
