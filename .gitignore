@@ -1,7 +1,14 @@
 *.o
+*/*.o
+*.a
+*/*.a
 *.elf
+*/*.elf
 *.zip
+*/*.zip
 *.gz
+*/*.gz
 *.tar
-!Makefile
+*/*.tar
+Makefile
 !*.*
