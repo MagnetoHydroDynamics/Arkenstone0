@@ -81,7 +81,22 @@ typedef int phase_t;
 #define MEMSZ (640*KB)
 
 typedef b8 MEMBUF_t[];
-typedef b8 CACHE_t[];
+
+typedef struct {
+    bool valid;
+    bool modified;
+    b32 tag;
+} BLOCK_t;
+
+typedef struct {
+    int misses;
+    size_t n_sets;
+    size_t n_blocks;
+    size_t n_words;
+    size_t sz;
+    b8 *data;
+    BLOCK_t blocks[];
+} CACHE_t;
 
 typedef b32 REGS_t[32];
 
@@ -120,9 +135,6 @@ typedef struct {
 typedef struct {
     int cycle_cnt;
     int inst_cnt;
-    int icache_misses;
-    int dcache_misses;
-    int l2cache_misses;
 
     b32 PC;
     REGS_t regs;
@@ -134,13 +146,8 @@ typedef struct {
     EXMEM_t ex_mem;
     MEMWB_t mem_wb;
     
-    size_t icache_sz;
     CACHE_t *icache;
-
-    size_t dcache_sz;
     CACHE_t *dcache;
-
-    size_t l2cache_sz;
     CACHE_t *l2cache;
     
     size_t mem_sz;
@@ -167,6 +174,7 @@ interp_r interpret(MIPS_t*);
 interp_r cycle(MIPS_t*);
 interp_r stall(MIPS_t*, phase_t);
 
+CACHE_t *new_CACHE(size_t, size_t, size_t);
 void init_MIPS(MIPS_t*, config_file*, size_t);
 void free_MIPS(MIPS_t*);
 
