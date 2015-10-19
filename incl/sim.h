@@ -1,8 +1,10 @@
 
-#include <stdint.h>
-
 #ifndef SIM_H
 #define SIM_H
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <ioutils.h>
 
 typedef bool b1;
 typedef uint8_t b8;
@@ -12,7 +14,6 @@ typedef uint16_t b16;
 typedef uint32_t b26;
 typedef uint32_t b32;
 typedef float f32;
-typedef uint32_t inst_t;
 
 #define ZERO ((b5)0)
 #define AT ((b5)1)
@@ -59,32 +60,93 @@ typedef int interp_r;
 #define INTERNAL_ERROR  ((interp_r)7)
 #define UNIMPLEMENTED  ((interp_r)8)
 
-typedef uint8_t mem_action;
-#define MEM_IDLE  ((mem_action)0)
-#define MEM_LOAD  ((mem_action)1)
-#define MEM_STORE ((mem_action)2)
+typedef uint8_t mem_action_t;
+#define MEM_IDLE  ((mem_action_t)0)
+#define MEM_LOAD  ((mem_action_t)1)
+#define MEM_STORE ((mem_action_t)2)
 
-typedef int pipeline_phase;
-#define IF ((pipeline_phase)0)
-#define ID ((pipeline_phase)1)
-#define EX ((pipeline_phase)2)
-#define MEM ((pipeline_phase)3)
-#define WB ((pipeline_phase)4)
+typedef int access_t;
+#define BYTE ((scalarwidth_t)1)
+#define HALF ((scalarwidth_t)2)
+#define WORD ((scalarwidth_t)4)
+
+typedef int phase_t;
+#define IF ((phase_t)0)
+#define ID ((phase_t)1)
+#define EX ((phase_t)2)
+#define MEM ((phase_t)3)
+#define WB ((phase_t)4)
 
 #define KB (1024)
 #define MEMSZ (640*KB)
 
-typedef u8 MEMBUF_t[MEMSZ];
+typedef b8 MEMBUF_t[];
+typedef b8 CACHE_t[];
 
 typedef b32 REGS_t[32];
-
-typedef b32 PC_t;
 
 typedef f32 FREGS_t[32];
 
 typedef struct  {
     b32 LO, HI;   
-} MULREGS_t;
+} MREGS_t;
+
+typedef struct {
+    b6 opcode;
+    b26 address;
+    b32 inst;
+} IFID_t;
+
+typedef struct {
+    b1 jump;
+    b32 jump_target;
+} IDEX_t;
+
+typedef struct {
+    access_t acess;
+    mem_action_t action;
+    
+    b32 address;
+    b32 value;
+    b6 reg;
+} EXMEM_t;
+
+typedef struct {
+    b1 nop;
+    b32 value;
+    b6 reg;
+} MEMWB_t;
+
+typedef struct {
+    int cycle_cnt;
+    int inst_cnt;
+    int icache_misses;
+    int dcache_misses;
+    int l2cache_misses;
+
+    b32 PC;
+    REGS_t regs;
+    FREGS_t fregs;
+    MREGS_t mregs;
+
+    IFID_t if_id;
+    IDEX_t id_ex;
+    EXMEM_t ex_mem;
+    MEMWB_t mem_wb;
+    
+    size_t icache_sz;
+    CACHE_t *icache;
+
+    size_t dcache_sz;
+    CACHE_t *dcache;
+
+    size_t l2cache_sz;
+    CACHE_t *l2cache;
+    
+    size_t mem_sz;
+    MEMBUF_t *mem;
+
+} MIPS_t;
 
 #ifndef SIM_C
 extern const char *reg_names[32];
@@ -98,7 +160,14 @@ const char *reg_names[32] = {
     "s4", "s5", "s6", "s7", 
     "t8", "t9", "k0", "k1", 
     "gp", "sp", "fp", "ra",
-}
+};
 #endif
+
+interp_r interpret(MIPS_t*);
+interp_r cycle(MIPS_t*);
+interp_r stall(MIPS_t*, phase_t);
+
+void init_MIPS(MIPS_t*, config_file*, size_t);
+void free_MIPS(MIPS_t*);
 
 #endif //ndef SIM_H
