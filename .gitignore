@@ -3,6 +3,7 @@ lib/
 main
 obj/
 obj/
+*.cfg
 !src/
 !incl/
 !Makefile
