@@ -28,8 +28,8 @@ clean:
 ./lib/libdebug.a: ./obj/debug.o
 	$(AR) ./lib/libdebug.a ./obj/debug.o
 
-./lib/libmips.a: ./obj/sim.o ./obj/elf.o ./obj/inst.o ./obj/mod.o
-	$(AR) ./lib/libmips.a ./obj/sim.o ./obj/elf.o ./obj/inst.o ./obj/mod.o
+./lib/libmips.a: ./obj/sim.o ./obj/elf.o ./obj/mod.o
+	$(AR) ./lib/libmips.a ./obj/sim.o ./obj/elf.o ./obj/mod.o
 
 ./lib/libutil.a: ./obj/utils.o ./obj/ioutils.o
 	$(AR) ./lib/libutil.a ./obj/utils.o ./obj/ioutils.o
@@ -59,6 +59,3 @@ clean:
 
 ./obj/elf.o: ./src/elf.c
 	$(CC_) $(CFLAGS) -I$(INCLDIR) -c -o ./obj/elf.o ./src/elf.c
-
-./obj/inst.o: ./src/inst.c
-	$(CC) -c -o ./obj/inst.o ./src/inst.c
