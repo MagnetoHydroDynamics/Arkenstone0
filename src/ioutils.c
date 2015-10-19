@@ -33,6 +33,7 @@ void errorf(const char *fmt, ...) {
 
 void init_config_file(config_file *conf) {
     memset(conf, 0, sizeof(config_file));
+    conf->name = NULL;
 }
 
 void read_config_file(const char *name, config_file *conf) {
@@ -67,7 +68,9 @@ void read_config_filef(FILE *file, config_file *conf) {
         conf->l2cache.words);
 
     if (17 != ret)
-        errorf("ERROR: read_config_file - Configuration file not in correct format\n");
+        errorf("error: read_config_file - configuration file %s%snot in correct format\n",
+                null == conf->name ? "" : conf->name, 
+                null == conf->name ? " " : "");
 }
 
 void verify_config(config_file *conf) {
@@ -88,5 +91,7 @@ void verify_config(config_file *conf) {
     ok = ok && popcnt(conf->l2cache.words) < 2;
 
     if (!ok)
-        errorf("ERROR: verify_config - Configuration file contains illegal values\n");
+        errorf("error: read_config_file - configuration file %s%scontains illegal values\n",
+                null == conf->name ? "" : conf->name, 
+                null == conf->name ? " " : "");
 }
