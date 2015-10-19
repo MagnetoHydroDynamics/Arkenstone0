@@ -7,8 +7,8 @@
 //  Annie Jane Pinder <anpi@di.ku.dk>
 //  Oleksandr Shturmov <oleks@oleks.info>
 
-#include "elf.h"
-#include "mips32.h"   // MIPS_RESERVE
+#include <elf.h>
+#include <mips32.h>   // MIPS_RESERVE
 
 #include <stdio.h>
 #include <stdint.h>
