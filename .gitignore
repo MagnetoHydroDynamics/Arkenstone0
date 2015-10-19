@@ -1,3 +1,8 @@
-!src/*
-!incl/*
+bin/
+lib/
+main
+obj/
+obj/
+!src/
+!incl/
 !Makefile
