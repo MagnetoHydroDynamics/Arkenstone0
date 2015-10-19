@@ -1,6 +1,6 @@
 
-#ifndef SIM_H
-#define SIM_H
+#ifndef MOD_H
+#define MOD_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -78,7 +78,6 @@ typedef int phase_t;
 #define WB ((phase_t)4)
 
 #define KB (1024)
-#define MEMSZ (640*KB)
 
 typedef b8 MEMBUF_t[];
 
@@ -89,7 +88,8 @@ typedef struct {
 } BLOCK_t;
 
 typedef struct {
-    int misses;
+    size_t hits;
+    size_t misses;
     size_t n_sets;
     size_t n_blocks;
     size_t n_words;
@@ -115,28 +115,34 @@ typedef struct {
 typedef struct {
     b1 jump;
     b32 jump_target;
+
+    b32 _inst;
 } IDEX_t;
 
 typedef struct {
-    access_t acess;
     mem_action_t action;
+    access_t acess;
     
     b32 address;
     b32 value;
     b6 reg;
+
+    b32 _inst;
 } EXMEM_t;
 
 typedef struct {
     b1 nop;
     b32 value;
     b6 reg;
+
+    b32 _inst;
 } MEMWB_t;
 
 typedef struct {
-    int cycle_cnt;
-    int inst_cnt;
+    size_t cycle_cnt;
+    size_t inst_cnt;
 
-    b32 PC;
+    b32 pc;
     REGS_t regs;
     FREGS_t fregs;
     MREGS_t mregs;
@@ -155,8 +161,9 @@ typedef struct {
 
 } MIPS_t;
 
-#ifndef SIM_C
+#ifndef MOD_C
 extern const char *reg_names[32];
+extern const char *report_regs[];
 #else
 const char *reg_names[32] = {
     "0", "at", "v0", "v1", 
@@ -168,14 +175,17 @@ const char *reg_names[32] = {
     "t8", "t9", "k0", "k1", 
     "gp", "sp", "fp", "ra",
 };
+const b6 report_regs[] = {
+    AT, V0, V1, T0, T1, T2, T3, T4, T5, T6, T7, SP, RA, ZERO
+};
 #endif
 
-interp_r interpret(MIPS_t*);
-interp_r cycle(MIPS_t*);
-interp_r stall(MIPS_t*, phase_t);
-
 CACHE_t *new_CACHE(size_t, size_t, size_t);
-void init_MIPS(MIPS_t*, config_file*, size_t);
+void clear_MIPS(MIPS_t*);
+void configure_MIPS(MIPS_t*, config_file*, size_t);
 void free_MIPS(MIPS_t*);
+void read_MIPS(MIPS_t *, const char *);
 
-#endif //ndef SIM_H
+void report_status(MIPS_t*);
+
+#endif //ndef MOD_H

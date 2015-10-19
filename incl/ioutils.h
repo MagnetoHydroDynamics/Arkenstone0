@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <elf.h>
+
 typedef struct {
 
     const char *name;
@@ -26,7 +28,7 @@ extern const char *const config_file_format;
 const int version[3] = { 0, 0, 1 };
 const char *usage_message[] = {
     "Usage:",  
-    "    %1$s <config> <elf>",
+    "    %s <config> <elf>",
     "",
     "Options:",
     "    none",
@@ -56,9 +58,10 @@ const char *const config_file_format =
 void usage() __attribute__((noreturn));
 void errorf(const char *, ...) __attribute__((noreturn));
 
-void init_config_file(config_file *);
+void clear_config_file(config_file *);
 void read_config_file(const char *, config_file *);
 void read_config_filef(FILE *, config_file *);
 void verify_config(config_file *);
+
 
 #endif //ndef UTILIO_H
