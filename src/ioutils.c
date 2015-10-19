@@ -8,8 +8,9 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#define UTILIO_C
-#include <utilio.h>
+#define IOUTILS_C
+#include <ioutils.h>
+#include <utils.h>
 
 void usage(const char *pname) {
 
@@ -33,7 +34,7 @@ void errorf(const char *fmt, ...) {
 void read_config_file(const char *name, config_file *conf) {
     FILE *f;
     if (NULL == (f = fopen(name, "r")))
-        errorf("ERROR: Unable to open confuguration file `%s'\nReason: %s", name, strerror(errno));
+        errorf("ERROR: read_config_file - Unable to open confuguration file `%s'\nReason: %s", name, strerror(errno));
     
     read_config_filef(f, conf);
 }
@@ -61,7 +62,7 @@ void read_config_filef(FILE *file, config_file *conf) {
         conf->l2_cache.words);
 
     if (17 != ret)
-        errorf("ERROR: Configuration file not in correct format\n");
+        errorf("ERROR: read_config_file - Configuration file not in correct format\n");
 
 }
 
@@ -70,18 +71,18 @@ void verify_config(config_file *conf) {
     for (int i = 0; i < 8; i++) {
         ok = ok && conf->t_regs[i] <= UINT_MAX;        
     }
-    of = ok && popcnt(conf->inst_cache.sets) < 2;
-    of = ok && popcnt(conf->inst_cache.blocks) < 2;
-    of = ok && popcnt(conf->inst_cache.words) < 2;
+    ok = ok && popcnt(conf->inst_cache.sets) < 2;
+    ok = ok && popcnt(conf->inst_cache.blocks) < 2;
+    ok = ok && popcnt(conf->inst_cache.words) < 2;
 
-    of = ok && popcnt(conf->data_cache.sets) < 2;
-    of = ok && popcnt(conf->data_cache.blocks) < 2;
-    of = ok && popcnt(conf->data_cache.words) < 2;
+    ok = ok && popcnt(conf->data_cache.sets) < 2;
+    ok = ok && popcnt(conf->data_cache.blocks) < 2;
+    ok = ok && popcnt(conf->data_cache.words) < 2;
 
-    of = ok && popcnt(conf->l2_cache.sets) < 2;
-    of = ok && popcnt(conf->l2_cache.blocks) < 2;
-    of = ok && popcnt(conf->l2_cache.words) < 2;
+    ok = ok && popcnt(conf->l2_cache.sets) < 2;
+    ok = ok && popcnt(conf->l2_cache.blocks) < 2;
+    ok = ok && popcnt(conf->l2_cache.words) < 2;
 
     if (!ok)
-        errorf("ERROR: Configuration file contains illegal values\n");
+        errorf("ERROR: verify_config - Configuration file contains illegal values\n");
 }

@@ -1,9 +1,10 @@
 
-#include <stdint.h>
-#include <stdlib.h>
-
 #ifndef UTILIO_H
 #define UTILIO_H
+
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct {
 
@@ -11,11 +12,11 @@ typedef struct {
 
     struct {
         size_t sets, blocks, words;
-    } inst_cache, data_chache, l2_cache;
+    } inst_cache, data_cache, l2_cache;
 
 } config_file;
 
-#ifndef UTILIO_C
+#ifndef IOUTILS_C
 extern const int version[3];
 extern const char *usage_message[];
 extern const char *const config_file_format;
