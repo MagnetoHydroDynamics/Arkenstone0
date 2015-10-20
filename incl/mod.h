@@ -4,8 +4,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
 #include <ioutils.h>
 
+// Abbreviated types
 typedef bool b1;
 typedef uint8_t b8;
 typedef uint8_t b5;
@@ -13,8 +15,10 @@ typedef uint8_t b6;
 typedef uint16_t b16;
 typedef uint32_t b26;
 typedef uint32_t b32;
+typedef uint64_t b64;
 typedef float f32;
 
+// Register numbers
 #define ZERO ((b5)0)
 #define AT ((b5)1)
 #define V0 ((b5)2)
@@ -49,7 +53,8 @@ typedef float f32;
 #define FP ((b5)30)
 #define RA ((b5)31)
 
-typedef int interp_r;
+// Interpretation result
+typedef uint8_t interp_r;
 #define CONTINUE         ((interp_r)0)
 #define SYSCALL_HIT      ((interp_r)1)
 #define OVERFLOW         ((interp_r)2)
@@ -60,17 +65,20 @@ typedef int interp_r;
 #define INTERNAL_ERROR  ((interp_r)7)
 #define UNIMPLEMENTED  ((interp_r)8)
 
+// Memory action in MEM pipeline stage
 typedef uint8_t mem_action_t;
 #define MEM_IDLE  ((mem_action_t)0)
 #define MEM_LOAD  ((mem_action_t)1)
 #define MEM_STORE ((mem_action_t)2)
 
-typedef int access_t;
-#define BYTE ((scalarwidth_t)1)
-#define HALF ((scalarwidth_t)2)
-#define WORD ((scalarwidth_t)4)
+// Memory access type in MEM pipeline stage
+typedef uint8_t access_t;
+#define BYTE ((access_t)0)
+#define WORD ((access_t)1)
+#define SBYTE ((access_t)2)
 
-typedef int phase_t;
+// Pipeline phase (unused)
+typedef uint8_t phase_t;
 #define IF ((phase_t)0)
 #define ID ((phase_t)1)
 #define EX ((phase_t)2)
@@ -82,83 +90,98 @@ typedef int phase_t;
 typedef b8 MEMBUF_t[];
 
 typedef struct {
-    bool valid;
-    bool modified;
+    b1 valid;
+    b1 modified;
+    size_t age; // bit of a hack,
+                // saves cycle count
     b32 tag;
 } BLOCK_t;
 
 typedef struct {
+    const char *name;
     size_t hits;
     size_t misses;
+
     size_t n_sets;
     size_t n_blocks;
     size_t n_words;
+
     size_t sz;
     b8 *data;
-    BLOCK_t blocks[];
+
+    BLOCK_t blocks[]; // Dynamically sized struct
 } CACHE_t;
 
 typedef b32 REGS_t[32];
 
-typedef f32 FREGS_t[32];
+typedef f32 FREGS_t[32]; // unused
 
 typedef struct  {
     b32 LO, HI;   
-} MREGS_t;
+} MREGS_t; // unused
 
 typedef struct {
+    b1 bubble;
     b32 addr;
     b32 inst;
-} disas_t;
+} disas_t; // debug disassembly
 
 typedef struct {
+    b1 bubble;
+
     b6 opcode;
+    b16 immed;
     b26 address;
+
     b32 inst;
     b32 next_pc;
-    
+
     disas_t dis;
 } IFID_t;
 
 typedef struct {
     b1 jump;
     b32 jump_target;
+    b1 jump_next;
+    b1 invert;
 
     b5 funct;
+    b5 shamt;
+    b32 immed;
 
     b5 rd;
-    b32 rd_val;
-
     b5 rs;
-    b32 rs_val;
-
     b5 rt;
+
+    b32 rs_val;
     b32 rt_val;
+
+    mem_action_t action;
+    access_t access;
+
+    b1 stall;
     
     disas_t dis;
 } IDEX_t;
 
 typedef struct {
-    mem_action_t action;
-    access_t acess;
-    
     b1 jump;
-    b32 jump_taget;
+    b32 jump_target;
+    b1 cond;
 
-    b32 address;
-    b32 value;
-    b6 reg;
+    b6 rd;
+    b32 rd_val;
+
+    mem_action_t action;
+    access_t access;
 
     disas_t dis;
 } EXMEM_t;
 
 typedef struct {
      
-    b1 nop;
-    b32 value;
-    b6 reg;
-
-    b32 _inst;
+    b6 rd;
+    b32 rd_val;
 
     disas_t dis;
 } MEMWB_t;
@@ -200,15 +223,20 @@ const char *reg_names[32] = {
     "t8", "t9", "k0", "k1", 
     "gp", "sp", "fp", "ra",
 };
-const b6 report_regs[] = {
+const b6 report_regs[] = { // used in Report Status
     AT, V0, V1, T0, T1, T2, T3, T4, T5, T6, T7, SP, RA, ZERO
 };
 #endif
 
-CACHE_t *new_CACHE(size_t, size_t, size_t);
+// Allocate new cache
+CACHE_t *new_CACHE(size_t, size_t, size_t, const char*);
+
+// manage MIPS_t struct
 void clear_MIPS(MIPS_t*);
 void configure_MIPS(MIPS_t*, config_file*, size_t);
 void free_MIPS(MIPS_t*);
+
+// Calls elf_dump
 void read_MIPS(MIPS_t *, const char *);
 
 void report_status(MIPS_t*);

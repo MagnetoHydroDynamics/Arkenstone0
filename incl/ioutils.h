@@ -8,6 +8,7 @@
 
 #include <elf.h>
 
+// Configuration file data struct
 typedef struct {
 
     const char *name;
@@ -55,13 +56,17 @@ const char *const config_file_format =
 #endif
 
 #define EXIT_FATAL (42)
+
+// Print usage message above and exit
 void usage() __attribute__((noreturn));
+
+// Attempt to print error to stderr, then exit
 void errorf(const char *, ...) __attribute__((noreturn));
 
+// Manage above configuration file struct
 void clear_config_file(config_file *);
 void read_config_file(const char *, config_file *);
 void read_config_filef(FILE *, config_file *);
 void verify_config(config_file *);
-
 
 #endif //ndef UTILIO_H
