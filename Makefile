@@ -28,8 +28,8 @@ clean:
 ./lib/libdebug.a: ./obj/debug.o
 	$(AR) ./lib/libdebug.a ./obj/debug.o
 
-./lib/libmips.a: ./obj/sim.o ./obj/elf.o ./obj/mod.o
-	$(AR) ./lib/libmips.a ./obj/sim.o ./obj/elf.o ./obj/mod.o
+./lib/libmips.a: ./obj/sim.o ./obj/elf.o ./obj/mod.o ./obj/mem.o
+	$(AR) ./lib/libmips.a ./obj/sim.o ./obj/elf.o ./obj/mod.o ./obj/mem.o
 
 ./lib/libutil.a: ./obj/utils.o ./obj/ioutils.o
 	$(AR) ./lib/libutil.a ./obj/utils.o ./obj/ioutils.o
@@ -46,10 +46,13 @@ clean:
 	$(CC) -c -o ./obj/nodebug.o ./src/nodebug.c
 
 ./obj/sim.o: ./src/sim.c
-	 $(CC) -c -o ./obj/sim.o ./src/sim.c
+	$(CC) -c -o ./obj/sim.o ./src/sim.c
 
 ./obj/mod.o: ./src/mod.c
-	 $(CC) -c -o ./obj/mod.o ./src/mod.c
+	$(CC) -c -o ./obj/mod.o ./src/mod.c
+
+./obj/mem.o: ./src/mem.c
+	$(CC) -c -o ./obj/mem.o ./src/mem.c
 
 ./obj/utils.o: ./src/utils.c
 	$(CC) -c -o ./obj/utils.o ./src/utils.c
