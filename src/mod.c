@@ -9,7 +9,7 @@
 #include <debug.h>
 #undef MOD_C
 
-CACHE_t *new_CACHE(size_t sets, size_t blocks, size_t words) {
+CACHE_t *new_CACHE(size_t sets, size_t blocks, size_t words, const char *name) {
 
     debug("Allocating new cache. Sets: %zu, blocks: %zu, words: %zu\n", sets, blocks, words);
 
@@ -22,6 +22,8 @@ CACHE_t *new_CACHE(size_t sets, size_t blocks, size_t words) {
     res->n_blocks = blocks;
     res->n_words = words;
 
+    res->name = name;
+
     res->misses = 0;
     res->hits = 0;
 
@@ -29,13 +31,19 @@ CACHE_t *new_CACHE(size_t sets, size_t blocks, size_t words) {
         errorf("ERROR: new_CACHE - unable to allocate memory\nReason: %s", strerror(errno));
 
     memset(res->data, 0, res->sz);
-    memset(res->blocks, 0, res->n_sets * res->n_blocks);
+    memset(res->blocks, 0, res->n_sets * res->n_blocks * sizeof(BLOCK_t));
     
     return res;
 }
 
 void clear_MIPS(MIPS_t *mips) {
     memset(mips, 0, sizeof(MIPS_t));
+
+    mips->if_id.dis.bubble =
+    mips->id_ex.dis.bubble =
+    mips->ex_mem.dis.bubble =
+    mips->mem_wb.dis.bubble =
+    true;
 }
 
 void configure_MIPS(MIPS_t *mips, config_file *conf, size_t buf) {
@@ -53,9 +61,9 @@ void configure_MIPS(MIPS_t *mips, config_file *conf, size_t buf) {
     if (NULL == (mips->mem = malloc(mips->mem_sz = buf)))
         errorf("ERROR: init_MIPS - unable to allocate memory buffer\nReason: %s", strerror(errno));
     
-    mips->icache = new_CACHE(conf->icache.sets, conf->icache.blocks, conf->icache.words);
-    mips->dcache = new_CACHE(conf->dcache.sets, conf->dcache.blocks, conf->dcache.words);
-    mips->l2cache = new_CACHE(conf->l2cache.sets, conf->l2cache.blocks, conf->l2cache.words);
+    mips->icache = new_CACHE(conf->icache.sets, conf->icache.blocks, conf->icache.words, "i");
+    mips->dcache = new_CACHE(conf->dcache.sets, conf->dcache.blocks, conf->dcache.words, "d");
+    mips->l2cache = new_CACHE(conf->l2cache.sets, conf->l2cache.blocks, conf->l2cache.words, "l2");
 }
 
 void free_MIPS(MIPS_t *mips) {

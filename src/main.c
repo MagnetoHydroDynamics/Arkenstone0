@@ -29,6 +29,44 @@ int main(int argc, char *argv[]) {
     
     read_MIPS(&mips, argv[2]);    
 
+    switch (interpret(&mips)) {
+        case CONTINUE:
+        case INTERNAL_ERROR:
+            errorf("ERROR: interpret - Internal error in simulation\n");
+
+        case UNIMPLEMENTED:
+            errorf("ERROR: unimplemented feature.\n");
+
+        case OVERFLOW:
+            printf("Overflow in arithmetic operation.\n");
+            dis_MIPS(&mips);
+            break;
+
+        case DELAY_SLOT_JUMP:
+            printf("Delay slot jump.\n");
+            dis_MIPS(&mips);
+            break;
+
+        case ACCESS_VIOLATION:
+            printf("Access violation.\n");
+            dis_MIPS(&mips);
+            break;
+
+        case UNALIGNED_ACCESS:
+            printf("Unaligned access.\n");
+            dis_MIPS(&mips);
+            break;
+
+        case BAD_INSTRUCTION:
+            printf("Bad instruction.\n");
+            dis_MIPS(&mips);
+            break;
+
+        case SYSCALL_HIT:
+            break;
+
+    }
+
     report_status(&mips);
 
     free_MIPS(&mips);

@@ -91,17 +91,14 @@ void verify_config(config_file *conf) {
     for (int i = 0; i < 8; i++) {
         ok = ok && conf->t_regs[i] <= UINT_MAX;        
     }
-    ok = ok && popcnt(conf->icache.sets) < 2;
-    ok = ok && popcnt(conf->icache.blocks) < 2;
-    ok = ok && popcnt(conf->icache.words) < 2;
 
-    ok = ok && popcnt(conf->dcache.sets) < 2;
-    ok = ok && popcnt(conf->dcache.blocks) < 2;
-    ok = ok && popcnt(conf->dcache.words) < 2;
-
-    ok = ok && popcnt(conf->l2cache.sets) < 2;
-    ok = ok && popcnt(conf->l2cache.blocks) < 2;
-    ok = ok && popcnt(conf->l2cache.words) < 2;
+#define TEST(v) do { ok = ok && ((popcnt(v) < 2) && (v < 0x10000)); } while (0)
+#define TESTS(c) do { TEST(c.sets); TEST(c.blocks); TEST(c.words); } while(0)
+    TESTS(conf->icache);
+    TESTS(conf->dcache);
+    TESTS(conf->l2cache);
+#undef TEST
+#undef TESTS
 
     if (!ok)
         errorf("ERROR: read_config_file - configuration file %s%scontains illegal values\n",
