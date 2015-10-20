@@ -43,7 +43,14 @@ void debug(const char *fmt, ...) {
     }
 }
 
-void disassemble(b32 pc, b32 inst) {
+void disassemble(disas_t *dis) {
+        b32 pc = dis->addr;
+        b32 inst = dis->inst;
+
+        if (dis->bubble) {
+            debug("   = bubble\n");
+            return;
+        }
 
 // debug(fmt, pc, mne, rd, rs, rt, shamt, imm, addr, addr + imm);
 //             1    2   3  4    5     6     7     8      9
@@ -61,15 +68,15 @@ void disassemble(b32 pc, b32 inst) {
             (GET_ADDRESS(inst) + SIGN_EXTEND(GET_IMM(inst))) * 4); \
         } while (0)
 
-#define RFMT "%1$08lx  %2$s $%3$s, $%4$s, $%5$s\n"
-#define RsFMT "%1$08lx  %2$s $%3$s, $%4$s, $%6$u\n"
-#define RjFMT "%1$08lx  %2$s $%3$s\n"
-#define R_FMT "%1$08lx  %2$s\n"
-#define JFMT "%1$08lx  %2$s %8$08x\n"
-#define IxFMT "%1$08lx  %2$s $%4$s, $%5$s, %7$x\n"
-#define IuFMT "%1$08lx  %2$s $%4$s, $%5$s, %7$u\n"
-#define IdFMT "%1$08lx  %2$s $%4$s, $%5$s, %7$d\n"
-#define IbFMT "%1$08lx  %2$s $%4$s, $%5$s, %9$08x\n"
+#define RFMT  "   = %1$08x:  %2$s $%3$s, $%4$s, $%5$s\n"
+#define RsFMT "   = %1$08x:  %2$s $%3$s, $%4$s, $%6$u\n"
+#define RjFMT "   = %1$08x:  %2$s $%3$s\n"
+#define R_FMT "   = %1$08x:  %2$s\n"
+#define JFMT  "   = %1$08x:  %2$s %8$08x\n"
+#define IxFMT "   = %1$08x:  %2$s $%4$s, $%5$s, %7$x\n"
+#define IuFMT "   = %1$08x:  %2$s $%4$s, $%5$s, %7$u\n"
+#define IdFMT "   = %1$08x:  %2$s $%4$s, $%5$s, %7$d\n"
+#define IbFMT "   = %1$08x:  %2$s $%4$s, $%5$s, %9$08x\n"
 
     const char *mne = NULL;
     const char *dfmt = NULL;
@@ -172,7 +179,6 @@ void disassemble(b32 pc, b32 inst) {
             break;
     }
     
-    debug("%s", dfmt);
     PRINT;
 
 #undef PRINT
@@ -188,6 +194,15 @@ void disassemble(b32 pc, b32 inst) {
 #undef IuFMT
 #undef IdFMT
 #undef IbFMT
+
+}
+
+void dis_MIPS(MIPS_t *mips) {
+    
+    disassemble(& mips->if_id.dis);
+    disassemble(& mips->id_ex.dis);
+    disassemble(& mips->ex_mem.dis);
+    disassemble(& mips->mem_wb.dis);
 
 }
 
