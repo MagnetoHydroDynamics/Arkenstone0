@@ -10,12 +10,20 @@ extern FILE *debug_stream;
 FILE *debug_stream = NULL;
 #endif
 
+// Set the debug stream
 void set_debug(const char *);
 void set_debugf(FILE *);
 
+// Debug printf alias
 void debug(const char *, ...);
+
+// Hang until user presses enter
 void wait(void);
 
-void disassemble(b32, b32);
+// Disassemble an instruction
+void disassemble(disas_t *);
+
+// Disassemble the pipeline registers
+void dis_MIPS(MIPS_t *);
 
 #endif //ndef DEBUG_H
