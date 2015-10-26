@@ -128,6 +128,7 @@ typedef struct {
 
 typedef struct {
     b1 bubble;
+    b1 stall;
 
     b6 opcode;
     b16 immed;
@@ -145,6 +146,8 @@ typedef struct {
     b1 jump_next;
     b1 invert;
 
+    b1 stall;
+
     b5 funct;
     b5 shamt;
     b32 immed;
@@ -159,8 +162,6 @@ typedef struct {
     mem_action_t action;
     access_t access;
 
-    b1 stall;
-    
     disas_t dis;
 } IDEX_t;
 

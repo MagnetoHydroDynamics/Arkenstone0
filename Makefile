@@ -19,8 +19,6 @@ clean:
 	rm -f ./obj/*.o
 	rm -f ./lib/*.a
 	rm -f ./bin/*
-	rm -f ./mips/*.o
-	rm -f ./mips/*.elf
 
 # LIBS
 
