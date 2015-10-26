@@ -200,7 +200,7 @@ void disassemble(disas_t *dis, const char *phase) {
 
 void dis_MIPS(MIPS_t *mips) {
     
-    disassemble(& mips->if_id.dis, "id_is ");
+    disassemble(& mips->if_id.dis, "if_id ");
     disassemble(& mips->id_ex.dis, "id_ex ");
     disassemble(& mips->ex_mem.dis, "ex_mem");
     disassemble(& mips->mem_wb.dis, "mem_wb");

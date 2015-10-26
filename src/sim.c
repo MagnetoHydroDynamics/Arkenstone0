@@ -16,6 +16,8 @@ interp_r interpret(MIPS_t *mips) {
     do {
         res = cycle(mips);
     } while (CONTINUE == res);
+
+    debug("\n");
     
     return res;
 }
@@ -23,7 +25,6 @@ interp_r interpret(MIPS_t *mips) {
 interp_r cycle(MIPS_t *mips) {
     
     debug("\n");
-    debug("### Begin Cycle ###\n");
 
     interp_r code;
 
@@ -56,8 +57,6 @@ interp_r cycle(MIPS_t *mips) {
 
     mips->cycle_cnt += 1;
 
-    debug("Cycles: %zu\n", mips->cycle_cnt);
-    
     return CONTINUE;
 }
 
@@ -90,12 +89,13 @@ interp_r stage_id(MIPS_t *mips) {
     IDEX_t *idex = &mips->id_ex;
     MEMWB_t *memwb = &mips->mem_wb;
     b32 inst = ifid->inst;
+    b16 immed = ifid->immed;
 
     idex->jump = false;
     idex->jump_next = false;
     idex->invert = false;
     idex->jump_target = 0x0;
-    idex->immed = 0x0;
+    idex->immed = immed;
     idex->funct = 0x0;
     idex->shamt = 0x0;
     idex->rd = ZERO;
@@ -115,9 +115,11 @@ interp_r stage_id(MIPS_t *mips) {
 
     switch (ifid->opcode) {
         case OPCODE_R        :
+            idex->immed = 0x0;
             idex->funct = GET_FUNCT(inst);
             idex->shamt = GET_SHAMT(inst);
             idex->rd = GET_RD(inst);
+
 
             return CONTINUE;
 
@@ -137,7 +139,7 @@ interp_r stage_id(MIPS_t *mips) {
         case OPCODE_BNE      :
             idex->invert = true;
         case OPCODE_BEQ      :
-            idex->immed = SIGN_EXTEND(ifid->immed) * 4;
+            idex->immed = SIGN_EXTEND(immed) * 4;
             idex->jump_next = true;
             idex->jump_target = ifid->next_pc;
             idex->funct = FUNCT_SUBU;
@@ -146,49 +148,52 @@ interp_r stage_id(MIPS_t *mips) {
 
         case OPCODE_ADDI     :
             idex->rd = idex->rt;
-            idex->rt_val = SIGN_EXTEND(idex->immed);
+            idex->rt_val = SIGN_EXTEND(immed);
             idex->funct = FUNCT_ADD;
+
+            debug("op %s, %s=%u, %s=%u\n",
+                            reg_names[idex->rd], reg_names[idex->rs], idex->rs_val, reg_names[idex->rt], idex->rt_val);
 
             return CONTINUE;
 
         case OPCODE_ADDIU    :
             idex->rd = idex->rt;
-            idex->rt_val = ZERO_EXTEND(idex->immed);
+            idex->rt_val = ZERO_EXTEND(ifid->immed);
             idex->funct = FUNCT_ADDU;
 
             return CONTINUE;
 
         case OPCODE_SLTI     :
             idex->rd = idex->rt;
-            idex->rt_val = SIGN_EXTEND(idex->immed);
+            idex->rt_val = SIGN_EXTEND(immed);
             idex->funct = FUNCT_SLT;
 
             return CONTINUE;
 
         case OPCODE_SLTIU    :
             idex->rd = idex->rt;
-            idex->rt_val = ZERO_EXTEND(idex->immed);
+            idex->rt_val = ZERO_EXTEND(immed);
             idex->funct = FUNCT_SLTU;
 
             return CONTINUE;
 
         case OPCODE_ANDI     :
             idex->rd = idex->rt;
-            idex->rt_val = ZERO_EXTEND(idex->immed);
+            idex->rt_val = ZERO_EXTEND(immed);
             idex->funct = FUNCT_AND;
 
             return CONTINUE;
 
         case OPCODE_ORI      :
             idex->rd = idex->rt;
-            idex->rt_val = ZERO_EXTEND(idex->immed);
+            idex->rt_val = ZERO_EXTEND(immed);
             idex->funct = FUNCT_OR;
 
             return CONTINUE;
 
         case OPCODE_LUI      :
             idex->rd = idex->rt;
-            idex->rt_val = ZERO_EXTEND(idex->immed) << 16;
+            idex->rt_val = ZERO_EXTEND(immed) << 16;
             idex->rs = 0;
             idex->rs_val = 0;
             idex->funct = FUNCT_OR;
@@ -199,7 +204,7 @@ interp_r stage_id(MIPS_t *mips) {
             idex->access = WORD;
             idex->action = MEM_LOAD;
             idex->jump_target = idex->rs_val;
-            idex->immed = SIGN_EXTEND(ifid->immed);
+            idex->immed = SIGN_EXTEND(immed);
 
             idex->rd = idex->rt;
             idex->rt = ZERO;
@@ -218,7 +223,7 @@ interp_r stage_id(MIPS_t *mips) {
             idex->access = WORD;
             idex->action = MEM_STORE;
             idex->jump_target = idex->rs_val;
-            idex->immed = SIGN_EXTEND(ifid->immed);
+            idex->immed = SIGN_EXTEND(immed);
 
             idex->rd = idex->rt;
             idex->rt = ZERO;
@@ -277,15 +282,17 @@ interp_r stage_ex(MIPS_t *mips) {
 
         case FUNCT_ADD       :
             I = idex->rs_val;
-            I += idex->rs_val;
+            I += idex->rt_val;
             if (I > UINT32_MAX) return OVERFLOW;
 
             exmem->rd_val = (b32) I;
+
+            debug("%u + %u = %u\n", idex->rs_val, idex->rt_val, exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_SUB       :
             I = idex->rs_val;
-            I -= idex->rs_val;
+            I -= idex->rt_val;
             if (I > UINT32_MAX) return OVERFLOW;
 
             exmem->rd_val = (b32) I;
@@ -421,7 +428,8 @@ interp_r stage_wb(MIPS_t *mips) {
     
     MEMWB_t *memwb = &mips->mem_wb;
 
-    if (0 != memwb->rd) {
+    if (ZERO != memwb->rd) {
+        debug("$%s <- %08X\n", reg_names[memwb->rd], memwb->rd_val);
         mips->regs[memwb->rd] = memwb->rd_val;
     }
 

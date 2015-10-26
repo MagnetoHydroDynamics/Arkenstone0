@@ -6,3 +6,5 @@ main
 !src/
 !incl/
 !Makefile
+*.swp
+*/*.swp
