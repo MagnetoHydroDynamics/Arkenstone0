@@ -15,9 +15,6 @@ debug: ./obj/main.o all_libs ./lib/libdebug.a
 
 all_libs: ./lib/libutil.a ./lib/libmips.a
 
-mips: ./mips/*.S
-	./make-all-mips
-
 clean:
 	rm -f ./obj/*.o
 	rm -f ./lib/*.a
