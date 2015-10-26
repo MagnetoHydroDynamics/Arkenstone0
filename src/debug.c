@@ -48,7 +48,7 @@ void disassemble(disas_t *dis, const char *phase) {
         b32 inst = dis->inst;
 
         if (dis->bubble) {
-            debug("   = bubble\n");
+            debug("%s = bubble\n", phase);
             return;
         }
 
@@ -74,10 +74,10 @@ void disassemble(disas_t *dis, const char *phase) {
 #define RjFMT "%10$s = %1$08x:  %2$s $%3$s\n"
 #define R_FMT "%10$s = %1$08x:  %2$s\n"
 #define JFMT  "%10$s = %1$08x:  %2$s %8$08x\n"
-#define IxFMT "%10$s = %1$08x:  %2$s $%4$s, $%5$s, %7$x\n"
-#define IuFMT "%10$s = %1$08x:  %2$s $%4$s, $%5$s, %7$u\n"
-#define IdFMT "%10$s = %1$08x:  %2$s $%4$s, $%5$s, %7$d\n"
-#define IbFMT "%10$s = %1$08x:  %2$s $%4$s, $%5$s, %9$08x\n"
+#define IxFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %7$x\n"
+#define IuFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %7$u\n"
+#define IdFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %7$d\n"
+#define IbFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %9$08x\n"
 
     const char *mne = NULL;
     const char *dfmt = NULL;

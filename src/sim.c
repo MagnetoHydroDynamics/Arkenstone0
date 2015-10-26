@@ -15,12 +15,6 @@ interp_r interpret(MIPS_t *mips) {
 
     do {
         res = cycle(mips);
-        debug("Cycles: %zu", mips->cycle_cnt);
-
-        
-        /* if (mips->cycle_cnt > 1000) { */
-        /*     return INTERNAL_ERROR; */
-        /* } */
     } while (CONTINUE == res);
     
     return res;
@@ -61,6 +55,8 @@ interp_r cycle(MIPS_t *mips) {
         mips->pc = mips->if_id.next_pc;
 
     mips->cycle_cnt += 1;
+
+    debug("Cycles: %zu\n", mips->cycle_cnt);
     
     return CONTINUE;
 }
@@ -123,7 +119,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->shamt = GET_SHAMT(inst);
             idex->rd = GET_RD(inst);
 
-            debug("R-type\n");
             return CONTINUE;
 
         case OPCODE_JAL      :
@@ -137,7 +132,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->jump = true;
             idex->jump_target = ifid->address * 4;
 
-            debug("J-type\n");
             return CONTINUE;
 
         case OPCODE_BNE      :
@@ -148,7 +142,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->jump_target = ifid->next_pc;
             idex->funct = FUNCT_SUBU;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_ADDI     :
@@ -156,7 +149,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rt_val = SIGN_EXTEND(idex->immed);
             idex->funct = FUNCT_ADD;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_ADDIU    :
@@ -164,7 +156,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rt_val = ZERO_EXTEND(idex->immed);
             idex->funct = FUNCT_ADDU;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_SLTI     :
@@ -172,7 +163,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rt_val = SIGN_EXTEND(idex->immed);
             idex->funct = FUNCT_SLT;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_SLTIU    :
@@ -180,7 +170,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rt_val = ZERO_EXTEND(idex->immed);
             idex->funct = FUNCT_SLTU;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_ANDI     :
@@ -188,7 +177,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rt_val = ZERO_EXTEND(idex->immed);
             idex->funct = FUNCT_AND;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_ORI      :
@@ -196,7 +184,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rt_val = ZERO_EXTEND(idex->immed);
             idex->funct = FUNCT_OR;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_LUI      :
@@ -206,7 +193,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rs_val = 0;
             idex->funct = FUNCT_OR;
 
-            debug("I-type\n");
             return CONTINUE;
 
         case OPCODE_LW       :
@@ -226,7 +212,6 @@ interp_r stage_id(MIPS_t *mips) {
             stall(mips);
             idex->stall = true;
 
-            debug("M-type\n");
             return CONTINUE;
 
         case OPCODE_SW       :
@@ -245,7 +230,6 @@ interp_r stage_id(MIPS_t *mips) {
             stall(mips);
             idex->stall = true;
 
-            debug("M-type\n");
             return CONTINUE;
 
         default:
@@ -285,11 +269,10 @@ interp_r stage_ex(MIPS_t *mips) {
             exmem->jump = true;
             exmem->cond = true;
             exmem->jump_target = idex->rs_val;
-            debug("funct JR to %08x\n", exmem->jump_target);
+
             return CONTINUE;
 
         case FUNCT_SYSCALL   :
-            debug("funct Syscall\n");
             return SYSCALL_HIT;
 
         case FUNCT_ADD       :
@@ -298,7 +281,6 @@ interp_r stage_ex(MIPS_t *mips) {
             if (I > UINT32_MAX) return OVERFLOW;
 
             exmem->rd_val = (b32) I;
-            debug("funct Add %llu\n", I);
             return CONTINUE;
 
         case FUNCT_SUB       :
@@ -307,13 +289,12 @@ interp_r stage_ex(MIPS_t *mips) {
             if (I > UINT32_MAX) return OVERFLOW;
 
             exmem->rd_val = (b32) I;
-            debug("funct Sub %llu\n", I);
             return CONTINUE;
 
         case FUNCT_ADDU      :
             exmem->rd_val = idex->rs_val + idex->rt_val;
-            debug("funct Addu %u\n", exmem->rd_val);
             return CONTINUE;
+
 
 
         case FUNCT_SUBU      :
@@ -322,49 +303,41 @@ interp_r stage_ex(MIPS_t *mips) {
             // BEQ and BNE
             exmem->cond = idex->invert ^ (exmem->rd_val == 0);
 
-            debug("funct Subu %u\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_AND       :
             exmem->rd_val = idex->rs_val & idex->rt_val;
 
-            debug("funct And %08x\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_OR        :
             exmem->rd_val = idex->rs_val | idex->rt_val;
 
-            debug("funct Or %08x\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_NOR       :
             exmem->rd_val = ~(idex->rs_val | idex->rt_val);
 
-            debug("funct Nor %08x\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_SLT       :
             exmem->rd_val = ((int32_t)idex->rs_val) < ((int32_t)idex->rt_val);
 
-            debug("funct Slt %u\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_SLTU      :
             exmem->rd_val = idex->rs_val < idex->rt_val;
 
-            debug("funct Sltu %u\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_SLL       :
             exmem->rd_val = idex->rt_val << idex->shamt;
 
-            debug("funct Sll %08x\n", exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_SRL       :
             exmem->rd_val = idex->rt_val >> idex->shamt;
 
-            debug("funct Srl %08x\n", exmem->rd_val);
             return CONTINUE;
 
         default:
@@ -392,13 +365,11 @@ interp_r stage_mem(MIPS_t *mips) {
     // TODO: caching
     switch (exmem->action) {
         case MEM_IDLE:
-            debug("Idle\n");
             return CONTINUE;
         case MEM_LOAD:
 
             switch (exmem->access) {
                 case WORD:
-                    debug("Load word\n");
                     if ((address & ~0x3) != address)
                         return UNALIGNED_ACCESS;
 
@@ -406,13 +377,11 @@ interp_r stage_mem(MIPS_t *mips) {
                     return CONTINUE;
 
                 case BYTE:
-                    debug("Load byte\n");
                     memwb->rd_val =
                     (*mips->mem)[address - MIPS_RESERVE];
                     return CONTINUE;
 
                 case SBYTE:
-                    debug("Load sbyte\n");
                     memwb->rd_val =
                     SIGN_EXTEND((*mips->mem)[address - MIPS_RESERVE]);
 
@@ -427,7 +396,6 @@ interp_r stage_mem(MIPS_t *mips) {
             memwb->rd = ZERO;
             switch (exmem->access) {
                 case WORD:
-                    debug("Store word\n");
                     if ((address & ~0x3) != address)
                         return UNALIGNED_ACCESS;
 
@@ -436,7 +404,6 @@ interp_r stage_mem(MIPS_t *mips) {
 
                 case BYTE:
                 case SBYTE:
-                    debug("Store byte\n");
                     (*mips->mem)[address - MIPS_RESERVE] = (b8)exmem->rd_val;
                     return CONTINUE;
 
@@ -454,10 +421,7 @@ interp_r stage_wb(MIPS_t *mips) {
     
     MEMWB_t *memwb = &mips->mem_wb;
 
-    if (0 == memwb->rd) {
-        debug("Nop\n");
-    } else {
-        debug("$%s = %08x\n", reg_names[memwb->rd], memwb->rd_val);
+    if (0 != memwb->rd) {
         mips->regs[memwb->rd] = memwb->rd_val;
     }
 
