@@ -15,10 +15,15 @@ debug: ./obj/main.o all_libs ./lib/libdebug.a
 
 all_libs: ./lib/libutil.a ./lib/libmips.a
 
+mips:
+	./make-all-mips
+
 clean:
 	rm -f ./obj/*.o
 	rm -f ./lib/*.a
 	rm -f ./bin/*
+	rm -f ./mips/*.o
+	rm -f ./mips/*.elf
 
 # LIBS
 
