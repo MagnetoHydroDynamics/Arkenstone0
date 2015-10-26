@@ -42,7 +42,6 @@ interp_r cycle(MIPS_t *mips) {
 #undef GUARD
 
     mips->if_id.bubble = false;
-    mips->id_ex.stall = false;
 
     if (mips->id_ex.jump && mips->ex_mem.jump)
         return DELAY_SLOT_JUMP;
@@ -63,8 +62,17 @@ interp_r cycle(MIPS_t *mips) {
 
 interp_r stage_if(MIPS_t *mips) {
     IFID_t *ifid = &mips->if_id;
+
+    if (ifid->bubble) {
+
+        ifid->opcode = OPCODE_R;
+        ifid->inst = 0x0;
+        ifid->immed = 0x0;
+        ifid->address = 0x0;
     
-    if (!ifid->bubble) {
+        ifid->next_pc = mips->pc;
+
+    } else {
         // TODO: caching
         
         ifid->inst = GET_BIGWORD(*(mips->mem), mips->pc);
@@ -80,6 +88,14 @@ interp_r stage_if(MIPS_t *mips) {
     ifid->dis.addr = mips->pc;
     ifid->dis.inst = ifid->inst;
 
+    if (OPCODE_LW == ifid->opcode || OPCODE_SW == ifid->opcode) {
+        ifid->bubble = true;
+        ifid->stall = true;
+    } else {
+        ifid->stall = false;
+    }
+
+
     return CONTINUE;
 }
 
@@ -92,11 +108,18 @@ interp_r stage_id(MIPS_t *mips) {
     b32 inst = ifid->inst;
     b16 immed = ifid->immed;
 
+    if(ifid->stall) {
+        ifid->bubble = true;
+        idex->stall = true;
+    } else {
+        idex->stall = false;
+    }
+
     idex->jump = false;
     idex->jump_next = false;
     idex->invert = false;
     idex->jump_target = 0x0;
-    idex->immed = immed;
+    idex->immed = SIGN_EXTEND(immed);
     idex->funct = 0x0;
     idex->shamt = 0x0;
     idex->rd = ZERO;
@@ -105,6 +128,8 @@ interp_r stage_id(MIPS_t *mips) {
     idex->rs_val = mips->regs[idex->rs];
     idex->rt_val = mips->regs[idex->rt];
     idex->dis = ifid->dis;
+    idex->action = MEM_IDLE;
+    idex->access = BYTE;
     
     // Register forwarding
     if (idex->rs == memwb->rd) idex->rs_val = memwb->rd_val;
@@ -114,13 +139,13 @@ interp_r stage_id(MIPS_t *mips) {
     if(idex->rt == ZERO) idex->rt_val = 0;
 
 
+
     switch (ifid->opcode) {
         case OPCODE_R        :
             idex->immed = 0x0;
             idex->funct = GET_FUNCT(inst);
             idex->shamt = GET_SHAMT(inst);
             idex->rd = GET_RD(inst);
-
 
             return CONTINUE;
 
@@ -202,18 +227,11 @@ interp_r stage_id(MIPS_t *mips) {
             idex->access = WORD;
             idex->action = MEM_LOAD;
             idex->jump_target = idex->rs_val;
-            idex->immed = SIGN_EXTEND(immed);
 
             idex->rd = idex->rt;
-            idex->rt = ZERO;
-            idex->rt_val = 0x0;
             idex->rs = ZERO;
             idex->rs_val = 0x0;
             idex->funct = FUNCT_OR;
-            
-            // stall twice to avoid hazards
-            stall(mips);
-            idex->stall = true;
 
             return CONTINUE;
 
@@ -221,17 +239,11 @@ interp_r stage_id(MIPS_t *mips) {
             idex->access = WORD;
             idex->action = MEM_STORE;
             idex->jump_target = idex->rs_val;
-            idex->immed = SIGN_EXTEND(immed);
 
             idex->rd = idex->rt;
-            idex->rt = ZERO;
             idex->rs = ZERO;
             idex->rs_val = 0x0;
             idex->funct = FUNCT_OR;
-
-            // stall twice to avoid hazards
-            stall(mips);
-            idex->stall = true;
 
             return CONTINUE;
 
@@ -249,12 +261,9 @@ interp_r stage_ex(MIPS_t *mips) {
     EXMEM_t *exmem = &mips->ex_mem;
     b64 I = 0;
 
-    if (idex->stall) {
-        stall(mips);
-    }
-
     exmem->jump = idex->jump_next;
-    exmem->jump_target = idex->jump_target + SIGN_EXTEND(idex->immed);
+    debug("Jump target: %08X\n",
+        exmem->jump_target = idex->jump_target + idex->immed);
     exmem->cond = false;
     exmem->action = idex->action;
     exmem->access = idex->access;
@@ -266,6 +275,9 @@ interp_r stage_ex(MIPS_t *mips) {
     if (!exmem->dis.bubble)
         mips->inst_cnt++;
 
+    if (idex->stall) {
+        mips->if_id.bubble = true;
+    }
 
     switch (idex->funct) {
         case FUNCT_JR        :
@@ -370,50 +382,62 @@ interp_r stage_mem(MIPS_t *mips) {
     switch (exmem->action) {
         case MEM_IDLE:
             return CONTINUE;
+
         case MEM_LOAD:
 
             switch (exmem->access) {
                 case WORD:
+
+
+                    debug("Loading @%08X\n", address);
+
                     if ((address & ~0x3) != address)
                         return UNALIGNED_ACCESS;
 
-                    memwb->rd_val = GET_BIGWORD(*mem, address);
+                    if (MIPS_RESERVE <= address && address < mips->mem_sz + MIPS_RESERVE) {
+                        memwb->rd_val = GET_BIGWORD(*mem, address);
+                    } else return ACCESS_VIOLATION;
+
                     return CONTINUE;
 
                 case BYTE:
-                    memwb->rd_val =
-                    (*mips->mem)[address - MIPS_RESERVE];
-                    return CONTINUE;
-
                 case SBYTE:
-                    memwb->rd_val =
-                    SIGN_EXTEND((*mips->mem)[address - MIPS_RESERVE]);
-
-                    return CONTINUE;
+                    debug("Byte load operations unimplemented\n");
+                    return UNIMPLEMENTED;
 
                 default:
                     return INTERNAL_ERROR;
             }
 
         case MEM_STORE:
-            memwb->rd_val = 0x0;
-            memwb->rd = ZERO;
             switch (exmem->access) {
                 case WORD:
+
+                    debug("Storing @%08X\n", address);
+
                     if ((address & ~0x3) != address)
                         return UNALIGNED_ACCESS;
-
-                    SET_BIGWORD(*mem, address, exmem->rd_val);
-                    return CONTINUE;
+                    
+                    if (MIPS_RESERVE <= address && address < mips->mem_sz + MIPS_RESERVE) {
+                        SET_BIGWORD(*mem, address, exmem->rd_val);
+                    } else return ACCESS_VIOLATION;
+                    
+                    break;
 
                 case BYTE:
                 case SBYTE:
-                    (*mips->mem)[address - MIPS_RESERVE] = (b8)exmem->rd_val;
-                    return CONTINUE;
+                    debug("Byte store operations unimplemented\n");
+                    return UNIMPLEMENTED;
 
                 default:
                     return INTERNAL_ERROR;
             }
+
+            memwb->rd_val = 0x0;
+            memwb->rd = ZERO;
+
+            return CONTINUE;
+
         default:
             return INTERNAL_ERROR;
     }
@@ -431,21 +455,3 @@ interp_r stage_wb(MIPS_t *mips) {
 
     return CONTINUE;
 }
-
-void stall(MIPS_t *mips) {
-
-    IFID_t *ifid = &mips->if_id;
-    
-    ifid->next_pc = mips->pc;
-    ifid->inst = 0;
-    ifid->immed = 0;
-    ifid->address = 0;
-    ifid->opcode = 0;
-
-    ifid->dis.bubble = true;
-    ifid->dis.addr = 0x0;
-    ifid->dis.inst = 0x0;
-}
-
-
-

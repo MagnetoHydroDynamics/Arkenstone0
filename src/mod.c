@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <string.h>
 
+#include <mips32.h>
 #include <mod.h>
 #include <ioutils.h>
 #include <debug.h>
@@ -36,17 +37,14 @@ CACHE_t *new_CACHE(size_t sets, size_t blocks, size_t words, const char *name) {
     return res;
 }
 
-void clear_MIPS(MIPS_t *mips) {
-    memset(mips, 0, sizeof(MIPS_t));
-
-    mips->if_id.dis.bubble =
-    mips->id_ex.dis.bubble =
-    mips->ex_mem.dis.bubble =
-    mips->mem_wb.dis.bubble =
-    true;
-}
-
 void configure_MIPS(MIPS_t *mips, config_file *conf, size_t buf) {
+
+    disas_t q;
+    q.bubble = true;
+    q.addr = 0x0;
+    q.inst = 0x0;
+
+    memset(mips, 0, sizeof(MIPS_t));
     
     debug("Initializing MIPS model. Memory size: %zu\n", buf);
 
@@ -64,6 +62,13 @@ void configure_MIPS(MIPS_t *mips, config_file *conf, size_t buf) {
     mips->icache = new_CACHE(conf->icache.sets, conf->icache.blocks, conf->icache.words, "i");
     mips->dcache = new_CACHE(conf->dcache.sets, conf->dcache.blocks, conf->dcache.words, "d");
     mips->l2cache = new_CACHE(conf->l2cache.sets, conf->l2cache.blocks, conf->l2cache.words, "l2");
+
+    mips->regs[SP] = MIPS_RESERVE + mips->mem_sz;
+    
+    mips->if_id.dis = q;
+    mips->id_ex.dis = q;
+    mips->ex_mem.dis = q;
+    mips->mem_wb.dis = q;
 }
 
 void free_MIPS(MIPS_t *mips) {

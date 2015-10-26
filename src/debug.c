@@ -63,7 +63,7 @@ void disassemble(disas_t *dis, const char *phase) {
             reg_names[GET_RS(inst)], \
             reg_names[GET_RT(inst)], \
             GET_SHAMT(inst), \
-            GET_IMM(inst), \
+            SIGN_EXTEND(GET_IMM(inst)), \
             GET_ADDRESS(inst) * 4, \
             (GET_ADDRESS(inst) + SIGN_EXTEND(GET_IMM(inst))) * 4, \
             phase); \
@@ -78,6 +78,7 @@ void disassemble(disas_t *dis, const char *phase) {
 #define IuFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %7$u\n"
 #define IdFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %7$d\n"
 #define IbFMT "%10$s = %1$08x:  %2$s $%5$s, $%4$s, %9$08x\n"
+#define ImFMT "%10$s = %1$08x:  %2$s $%5$s, %7$d($%4$s)\n"
 
     const char *mne = NULL;
     const char *dfmt = NULL;
@@ -155,7 +156,7 @@ void disassemble(disas_t *dis, const char *phase) {
             MNE(lw);
         case OPCODE_SW       :
             MNE(sw);
-            FMT(IdFMT);
+            FMT(ImFMT);
             break;
 
         case OPCODE_ADDIU    :
