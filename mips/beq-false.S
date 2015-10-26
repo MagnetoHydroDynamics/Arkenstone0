@@ -1,9 +1,11 @@
-# v0 should *not* be set to double the value of t0.
-# t0 must be something other than zero for this to work.
+# v0 and v1 should both be set to double the value of t0.
+# t0 must be non-zero for this to work.
 
-  j end
+  beq $t0, $0, true
+  nop # branch-delay slot
   add $v0, $t0, $t0
-end:
+true:
+  add $v1, $t0, $t0
   nop # nop the MEM stage to let add get to WB
   syscall # Detected in EX stage
   nop # nop the ID stage

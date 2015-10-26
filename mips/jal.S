@@ -1,7 +1,8 @@
 # v0 should *not* be set to double the value of t0.
+# Also, ra should be something like 0x40001c.
 # t0 must be something other than zero for this to work.
 
-  j end
+  jal end
   add $v0, $t0, $t0
 end:
   nop # nop the MEM stage to let add get to WB
