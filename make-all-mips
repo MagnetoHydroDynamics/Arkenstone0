@@ -1,5 +1,5 @@
 #!/bin/bash
 
-for i in /mips/*.S; do
+for i in ./mips/*.S; do
   mips-elf-as -o ${i%.S}.o $i && mips-elf-ld -o ${i%.S}.elf ${i%.S}.o
 done
