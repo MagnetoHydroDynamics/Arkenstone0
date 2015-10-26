@@ -29,7 +29,8 @@ interp_r cycle(MIPS_t *mips) {
     interp_r code;
 
 #define GUARD(call) do { if (CONTINUE != (code = call)) return code; } while (0)
-
+    
+    debug("xx_if  = mem[%08X]\n", mips->pc);
     dis_MIPS(mips);
 
     GUARD(stage_wb(mips));
@@ -46,10 +47,10 @@ interp_r cycle(MIPS_t *mips) {
     if (mips->id_ex.jump && mips->ex_mem.jump)
         return DELAY_SLOT_JUMP;
 
-    if (mips->id_ex.jump)
+    else if (mips->id_ex.jump)
         mips->pc = mips->id_ex.jump_target;
 
-    if (mips->ex_mem.jump && mips->ex_mem.cond)
+    else if (mips->ex_mem.jump && mips->ex_mem.cond)
         mips->pc = mips->ex_mem.jump_target;
     
     else
@@ -150,9 +151,6 @@ interp_r stage_id(MIPS_t *mips) {
             idex->rd = idex->rt;
             idex->rt_val = SIGN_EXTEND(immed);
             idex->funct = FUNCT_ADD;
-
-            debug("op %s, %s=%u, %s=%u\n",
-                            reg_names[idex->rd], reg_names[idex->rs], idex->rs_val, reg_names[idex->rt], idex->rt_val);
 
             return CONTINUE;
 
@@ -287,7 +285,6 @@ interp_r stage_ex(MIPS_t *mips) {
 
             exmem->rd_val = (b32) I;
 
-            debug("%u + %u = %u\n", idex->rs_val, idex->rt_val, exmem->rd_val);
             return CONTINUE;
 
         case FUNCT_SUB       :
@@ -429,7 +426,6 @@ interp_r stage_wb(MIPS_t *mips) {
     MEMWB_t *memwb = &mips->mem_wb;
 
     if (ZERO != memwb->rd) {
-        debug("$%s <- %08X\n", reg_names[memwb->rd], memwb->rd_val);
         mips->regs[memwb->rd] = memwb->rd_val;
     }
 
