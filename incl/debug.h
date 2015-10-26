@@ -21,7 +21,7 @@ void debug(const char *, ...);
 void wait(void);
 
 // Disassemble an instruction
-void disassemble(disas_t *);
+void disassemble(disas_t *, const char*);
 
 // Disassemble the pipeline registers
 void dis_MIPS(MIPS_t *);

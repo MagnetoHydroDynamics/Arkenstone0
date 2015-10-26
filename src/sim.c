@@ -14,13 +14,13 @@ interp_r interpret(MIPS_t *mips) {
     interp_r res = CONTINUE;
 
     do {
-        debug("Cycle count: %zu\n", mips->cycle_cnt);
         res = cycle(mips);
+        debug("Cycles: %zu", mips->cycle_cnt);
 
         
-        if (mips->cycle_cnt > 1000) {
-            return INTERNAL_ERROR;
-        }
+        /* if (mips->cycle_cnt > 1000) { */
+        /*     return INTERNAL_ERROR; */
+        /* } */
     } while (CONTINUE == res);
     
     return res;
@@ -34,6 +34,8 @@ interp_r cycle(MIPS_t *mips) {
     interp_r code;
 
 #define GUARD(call) do { if (CONTINUE != (code = call)) return code; } while (0)
+
+    dis_MIPS(mips);
 
     GUARD(stage_wb(mips));
     GUARD(stage_mem(mips));
@@ -69,8 +71,6 @@ interp_r stage_if(MIPS_t *mips) {
     if (!ifid->bubble) {
         // TODO: caching
         
-        debug("I.F.\n");
-
         ifid->inst = GET_BIGWORD(*(mips->mem), mips->pc);
     
         ifid->opcode = GET_OPCODE(ifid->inst);
@@ -78,11 +78,6 @@ interp_r stage_if(MIPS_t *mips) {
         ifid->address = GET_ADDRESS(ifid->inst);
 
         ifid->next_pc = mips->pc + 4;
-
-    } else {
-
-        debug("I.F.\n   = bubble\n");
-
     }
 
     ifid->dis.bubble = ifid->bubble;
@@ -99,9 +94,6 @@ interp_r stage_id(MIPS_t *mips) {
     IDEX_t *idex = &mips->id_ex;
     MEMWB_t *memwb = &mips->mem_wb;
     b32 inst = ifid->inst;
-
-    debug("I.D.\n");
-    disassemble(&ifid->dis);
 
     idex->jump = false;
     idex->jump_next = false;
@@ -270,9 +262,6 @@ interp_r stage_ex(MIPS_t *mips) {
     EXMEM_t *exmem = &mips->ex_mem;
     b64 I = 0;
 
-    debug("E.X.\n");
-    disassemble(&idex->dis);
-
     if (idex->stall) {
         stall(mips);
     }
@@ -395,9 +384,6 @@ interp_r stage_mem(MIPS_t *mips) {
 
     b32 address = exmem->jump_target;
 
-    debug("MEMORY\n");
-    disassemble(&exmem->dis);
-
     memwb->rd = exmem->rd;
     memwb->rd_val = exmem->rd_val;
 
@@ -468,9 +454,6 @@ interp_r stage_wb(MIPS_t *mips) {
     
     MEMWB_t *memwb = &mips->mem_wb;
 
-    debug("W.B.\n");
-    disassemble(&memwb->dis);
-
     if (0 == memwb->rd) {
         debug("Nop\n");
     } else {
@@ -483,8 +466,6 @@ interp_r stage_wb(MIPS_t *mips) {
 
 void stall(MIPS_t *mips) {
 
-    debug("Stalling");
-    
     IFID_t *ifid = &mips->if_id;
     
     ifid->next_pc = mips->pc;
