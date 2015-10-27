@@ -41,8 +41,6 @@ interp_r cycle(MIPS_t *mips) {
 
 #undef GUARD
 
-    mips->if_id.bubble = false;
-
     if (mips->id_ex.jump && mips->ex_mem.jump)
         return DELAY_SLOT_JUMP;
 
@@ -87,9 +85,10 @@ interp_r stage_if(MIPS_t *mips) {
     ifid->dis.bubble = ifid->bubble;
     ifid->dis.addr = mips->pc;
     ifid->dis.inst = ifid->inst;
+        
+    ifid->bubble = false;
 
     if (OPCODE_LW == ifid->opcode || OPCODE_SW == ifid->opcode) {
-        ifid->bubble = true;
         ifid->stall = true;
     } else {
         ifid->stall = false;
@@ -262,8 +261,7 @@ interp_r stage_ex(MIPS_t *mips) {
     b64 I = 0;
 
     exmem->jump = idex->jump_next;
-    debug("Jump target: %08X\n",
-        exmem->jump_target = idex->jump_target + idex->immed);
+    exmem->jump_target = idex->jump_target + idex->immed;
     exmem->cond = false;
     exmem->action = idex->action;
     exmem->access = idex->access;
@@ -388,9 +386,6 @@ interp_r stage_mem(MIPS_t *mips) {
             switch (exmem->access) {
                 case WORD:
 
-
-                    debug("Loading @%08X\n", address);
-
                     if ((address & ~0x3) != address)
                         return UNALIGNED_ACCESS;
 
@@ -402,7 +397,6 @@ interp_r stage_mem(MIPS_t *mips) {
 
                 case BYTE:
                 case SBYTE:
-                    debug("Byte load operations unimplemented\n");
                     return UNIMPLEMENTED;
 
                 default:
@@ -412,8 +406,6 @@ interp_r stage_mem(MIPS_t *mips) {
         case MEM_STORE:
             switch (exmem->access) {
                 case WORD:
-
-                    debug("Storing @%08X\n", address);
 
                     if ((address & ~0x3) != address)
                         return UNALIGNED_ACCESS;
@@ -426,7 +418,6 @@ interp_r stage_mem(MIPS_t *mips) {
 
                 case BYTE:
                 case SBYTE:
-                    debug("Byte store operations unimplemented\n");
                     return UNIMPLEMENTED;
 
                 default:
@@ -450,6 +441,7 @@ interp_r stage_wb(MIPS_t *mips) {
     MEMWB_t *memwb = &mips->mem_wb;
 
     if (ZERO != memwb->rd) {
+        debug("$%s <- 0x%08X\n", reg_names[memwb->rd], memwb->rd_val);
         mips->regs[memwb->rd] = memwb->rd_val;
     }
 
