@@ -3,7 +3,6 @@
 #define SIM_H
 
 #include <mod.h>
-#include <mem.h>
 
 // Interpretation infrastructure
 interp_r interpret(MIPS_t*);

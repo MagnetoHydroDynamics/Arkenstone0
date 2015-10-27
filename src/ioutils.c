@@ -69,16 +69,7 @@ void read_config_filef(FILE *file, config_file *conf) {
         &conf->t_regs[4],
         &conf->t_regs[5],
         &conf->t_regs[6],
-        &conf->t_regs[7],
-        &conf->icache.sets,
-        &conf->icache.blocks,
-        &conf->icache.words,
-        &conf->dcache.sets,
-        &conf->dcache.blocks,
-        &conf->dcache.words,
-        &conf->l2cache.sets,
-        &conf->l2cache.blocks,
-        &conf->l2cache.words);
+        &conf->t_regs[7]);
 
     if (17 != ret)
         errorf("ERROR: read_config_file - configuration file %s%snot in correct format\n",
@@ -91,14 +82,6 @@ void verify_config(config_file *conf) {
     for (int i = 0; i < 8; i++) {
         ok = ok && conf->t_regs[i] <= UINT_MAX;        
     }
-
-#define TEST(v) do { ok = ok && ((popcnt(v) < 2) && (v < 0x10000)); } while (0)
-#define TESTS(c) do { TEST(c.sets); TEST(c.blocks); TEST(c.words); } while(0)
-    TESTS(conf->icache);
-    TESTS(conf->dcache);
-    TESTS(conf->l2cache);
-#undef TEST
-#undef TESTS
 
     if (!ok)
         errorf("ERROR: read_config_file - configuration file %s%scontains illegal values\n",

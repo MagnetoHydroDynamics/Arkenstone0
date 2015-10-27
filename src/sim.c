@@ -5,7 +5,6 @@
 #include <mod.h>
 #include <debug.h>
 #include <sim.h>
-#include <mem.h>
 #include <mips32.h>
 #undef SIM_C
 

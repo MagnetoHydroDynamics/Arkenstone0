@@ -89,29 +89,6 @@ typedef uint8_t phase_t;
 
 typedef b8 MEMBUF_t[];
 
-typedef struct {
-    b1 valid;
-    b1 modified;
-    size_t age; // bit of a hack,
-                // saves cycle count
-    b32 tag;
-} BLOCK_t;
-
-typedef struct {
-    const char *name;
-    size_t hits;
-    size_t misses;
-
-    size_t n_sets;
-    size_t n_blocks;
-    size_t n_words;
-
-    size_t sz;
-    b8 *data;
-
-    BLOCK_t blocks[]; // Dynamically sized struct
-} CACHE_t;
-
 typedef b32 REGS_t[32];
 
 typedef f32 FREGS_t[32]; // unused
@@ -201,10 +178,6 @@ typedef struct {
     EXMEM_t ex_mem;
     MEMWB_t mem_wb;
     
-    CACHE_t *icache;
-    CACHE_t *dcache;
-    CACHE_t *l2cache;
-    
     size_t mem_sz;
     MEMBUF_t *mem;
 
@@ -228,9 +201,6 @@ const b6 report_regs[] = { // used in Report Status
     AT, V0, V1, T0, T1, T2, T3, T4, T5, T6, T7, SP, RA, ZERO
 };
 #endif
-
-// Allocate new cache
-CACHE_t *new_CACHE(size_t, size_t, size_t, const char*);
 
 // manage MIPS_t struct
 void clear_MIPS(MIPS_t*);

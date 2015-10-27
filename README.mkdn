@@ -1,5 +1,20 @@
-# Arkenstone
+# Arkenstone0
 — A MIPS32 simulator
+
+By Karl D. Asmussen, Student `twk181` at DIKU.
+
+## Note
+
+This one should be error-free, and runs all given examples of MIPS code to
+specification.
+
+## Features
+
+- Avoids load/store memory hazards with two bubble nops!
+- Avoids register access hazards with register forwarding!
+- Extensive debuggning mode!
+- Implements instructions `j jal beq bne addi addiu slti sltiu andi ori lui lw sw jr syscall add
+    addu sub subu and or nor slt sltu sll srl` through authentic pipeline hacks!
 
 ## Folder layout
 
@@ -12,7 +27,6 @@
 ## Module Layout
 
 - `mod` — Data modeling.
-- `mem` — Memory modeling.
 - `sim` — Simulation.
 - `utils` — Pure utility functions.
 - `ioutils` — Impute utility functions.
@@ -26,11 +40,6 @@
 
 `./bin/main` is the finished product.
 
-## Missing parts
-
-Caching is not yet implemented. The functions `_cache_*` stubbed in `mem.h` are
-for implementing the basic utility of caching.
-
 ## Stylistic choices
 
 I've opted to stray from the givens in the assignment text, out of personal preference,
@@ -39,8 +48,3 @@ and make a full-scaled C-project.
 Rather than be over-reliant on global variables, I've opted to pass pointers to
 structs in all my functions. This makes it easier to test individual functions on
 dummy data.
-
-
-
-
-
